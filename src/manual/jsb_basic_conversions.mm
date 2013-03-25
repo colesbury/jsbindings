@@ -984,8 +984,8 @@ JSB_Callback* JSB_prepare_callback( JSContext *cx, JSObject *jsthis, jsval funcv
 JSBool JSB_execute_callback( JSB_Callback *cb, unsigned argc, jsval *argv, jsval *rval)
 {
 	JSContext *cx = cb.cx;
-	JSObject *jsthis = cb.jsthis;
-	jsval funcval = cb.funcval;
+	JSObject *jsthis = cb.roots->jsthis;
+	jsval funcval = cb.roots->funcval;
 
 	return JS_CallFunctionValue(cx, jsthis, funcval, argc, argv, rval);
 }
@@ -996,19 +996,32 @@ JSBool JSB_execute_callback( JSB_Callback *cb, unsigned argc, jsval *argv, jsval
 {
 	if (self = [super init]) {
 		_cx = cx;
-		_funcval = funcval;
-		_jsthis = jsthis;
+        _roots = (js_block_roots *) malloc(sizeof(js_block_roots));
+        _roots->funcval = funcval;
+        _roots->jsthis = jsthis;
 
-		JS_AddValueRoot(cx, &_funcval);
-		JS_AddObjectRoot(cx, &_jsthis);
+		JS_AddValueRoot(cx, &_roots->funcval);
+		JS_AddObjectRoot(cx, &_roots->jsthis);
 	}
 	return self;
 }
 
 - (void) dealloc
 {
-	JS_RemoveValueRoot(_cx, &_funcval);
-	JS_RemoveObjectRoot(_cx, &_jsthis);
+    js_block_roots *roots = _roots;
+    JSContext *cx = _cx;
+
+    if ([NSThread isMainThread]) {
+        JS_RemoveValueRoot(cx, &roots->funcval);
+        JS_RemoveObjectRoot(cx, &roots->jsthis);
+        free(roots);
+    } else {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            JS_RemoveValueRoot(cx, &roots->funcval);
+            JS_RemoveObjectRoot(cx, &roots->jsthis);
+            free(roots);
+        });
+    }
 	[super dealloc];
 }
 

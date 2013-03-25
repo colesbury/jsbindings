@@ -122,12 +122,16 @@ jsval JSB_jsval_from_unknown( JSContext *cx, id obj);
 jsval JSB_jsval_from_struct( JSContext *cx, GLsizei count, void *data, JSArrayBufferViewType t);
 
 /** Adds GC roots for funcval and jsthis tied to the lifetime of a block */
+typedef struct {
+    JSObject *jsthis;
+    jsval funcval;
+} js_block_roots;
+
 @interface JSB_Callback : NSObject
 {
 }
 @property (nonatomic, readonly, assign) JSContext *cx;
-@property (nonatomic, readonly, assign) JSObject *jsthis;
-@property (nonatomic, readonly, assign) jsval funcval;
+@property (nonatomic, readonly, assign) js_block_roots *roots;
 
 - (id) initWithContext:(JSContext *)cx funcval:(jsval)funcval jsthis:(JSObject*)jsthis;
 
