@@ -72,22 +72,23 @@ class ObjC(object):
                     subclass = interface.group(2)
                     protocols = interface.group(3)
 
-                    if classname in self.entries:
-                        self.log('Key already on dictionary %s\n' % classname)
+                    if not classname in self.entries:
+                        self.entries[classname] = {}
+
+                    if protocols:
+                        # strip '<>'
+                        protocols = protocols.strip('<> ')
+
+                        # remove spaces
+                        protocols = protocols.replace(' ', '')
+
+                        # split by ','
+                        protocols = protocols.split(',')
                     else:
-                        if protocols:
-                            # strip '<>'
-                            protocols = protocols.strip('<> ')
+                        protocols = []
 
-                            # remove spaces
-                            protocols = protocols.replace(' ', '')
-
-                            # split by ','
-                            protocols = protocols.split(',')
-                        else:
-                            protocols = []
-
-                        self.entries[classname] = {'subclass': subclass, 'protocols': protocols}
+                    self.entries[classname]['subclass'] = subclass
+                    self.entries[classname]['protocols'] = protocols
 
                     current_class = classname
                     self.log('--> %s' % current_class)
