@@ -769,12 +769,9 @@ jsval JSB_jsval_from_NSString( JSContext *cx, NSString *str)
 	
 	size_t len = str.length;
 	
-	jschar *chars = (jschar *)js_malloc((len + 1) * sizeof(jschar));
-	if ( ! chars )
-		return JSVAL_NULL;
-	
-	[str getCharacters:chars range:NSMakeRange(0, len)];
+	jschar *chars = (jschar *)malloc((len + 1) * sizeof(jschar));
 	chars[len] = 0;
+	[str getCharacters:chars range:NSMakeRange(0, len)];
 	
 	JSString *ret_obj = JS_NewUCString(cx, chars, len);
 	return STRING_TO_JSVAL(ret_obj);
